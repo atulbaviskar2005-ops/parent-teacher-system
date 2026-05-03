@@ -19,8 +19,8 @@ This is a web-based application developed using Spring Boot and MySQL to improve
 
 ## 🔗 Project Status
 
-Completed (College Project)
+✅ Completed (College Project)  
+🚀 Open for future enhancements like cloud deployment and mobile support
 
-## 📷 Screenshots
 
-(Add screenshots here later)
+
