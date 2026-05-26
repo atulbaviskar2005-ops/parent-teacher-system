@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>EduConnect Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="navbar">
+        <h1>🎓 EduConnect</h1>
+        <p>Parent Teacher Communication System</p>
+    </div>
+
+    <div class="card form-box">
+        <h2 style="text-align:center; margin-bottom:20px;">Login</h2>
+
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Enter username">
+
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter password">
+
+        <button style="width:100%;" onclick="login()">Login</button>
+
+        <p id="message" style="text-align:center; color:red; margin-top:15px;"></p>
+
+        <hr style="margin:20px 0;">
+
+        <p><b>Demo Login:</b></p>
+        <p>Admin: admin / admin123</p>
+        <p>Teacher: teacher1 / 123</p>
+        <p>Parent: rahul_parent / 123</p>
+    </div>
+
+</div>
+
+<script>
+function login() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    fetch("/login", {   // ✅ FIXED HERE
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    })
+    .then(res => res.text())
+    .then(role => {
+        if (role === "ADMIN") {
+            window.location.href = "admin.html";
+        } 
+        else if (role === "TEACHER") {
+            window.location.href = "teacher.html";
+        } 
+        else if (role === "PARENT") {
+            localStorage.setItem("parentUsername", username);
+            window.location.href = "parent.html";
+        } 
+        else {
+            document.getElementById("message").innerText = "Invalid username or password";
+        }
+    })
+    .catch(error => {
+        document.getElementById("message").innerText = "Server not running";
+        console.log(error);
+    });
+}
+</script>
+
+</body>
+</html>

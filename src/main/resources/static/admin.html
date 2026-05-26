@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="navbar">
+        <h1>👨‍💼 Admin Dashboard</h1>
+        <p>Manage Students and Teachers</p>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <!-- STUDENT SECTION -->
+    <div class="card">
+        <h2>➕ Add / Edit Student</h2>
+
+        <input type="hidden" id="studentId">
+
+        <label>Student Name</label>
+        <input type="text" id="studentName">
+
+        <label>Class</label>
+        <input type="text" id="studentClass">
+
+        <label>Division</label>
+        <input type="text" id="division">
+
+        <label>Parent Username</label>
+        <input type="text" id="parentUsername">
+
+        <button onclick="addStudent()">Add Student</button>
+        <button onclick="updateStudent()">Update Student</button>
+    </div>
+
+    <div class="card">
+        <h2>📋 Student List</h2>
+        <button onclick="loadStudents()">Refresh</button>
+
+        <table id="studentTable">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Division</th>
+                <th>Parent</th>
+                <th>Action</th>
+            </tr>
+        </table>
+    </div>
+
+    <!-- TEACHER SECTION -->
+    <div class="card">
+        <h2>➕ Add / Edit Teacher</h2>
+
+        <input type="hidden" id="teacherId">
+
+        <label>Teacher Name</label>
+        <input type="text" id="teacherName">
+
+        <label>Subject</label>
+        <input type="text" id="teacherSubject">
+
+        <button onclick="addTeacher()">Add Teacher</button>
+        <button onclick="updateTeacher()">Update Teacher</button>
+    </div>
+
+    <div class="card">
+        <h2>📋 Teacher List</h2>
+        <button onclick="loadTeachers()">Refresh</button>
+
+        <table id="teacherTable">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Subject</th>
+                <th>Action</th>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+<script>
+
+function addStudent() {
+    fetch("/admin/addStudent", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            name: studentName.value,
+            studentClass: studentClass.value,
+            division: division.value,
+            parentUsername: parentUsername.value
+        })
+    })
+    .then(() => {
+        alert("Student Added");
+        clearStudentForm();
+        loadStudents();
+    });
+}
+
+function loadStudents() {
+    fetch("/admin/students")
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("studentTable");
+
+        table.innerHTML = `
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Division</th>
+                <th>Parent</th>
+                <th>Action</th>
+            </tr>`;
+
+        data.forEach(s => {
+            let row = table.insertRow();
+
+            row.innerHTML = `
+                <td>${s.id}</td>
+                <td>${s.name}</td>
+                <td>${s.studentClass}</td>
+                <td>${s.division}</td>
+                <td>${s.parentUsername}</td>
+                <td>
+                    <button onclick="editStudent(${s.id}, '${s.name}', '${s.studentClass}', '${s.division}', '${s.parentUsername}')">Edit</button>
+                    <button onclick="deleteStudent(${s.id})">Delete</button>
+                </td>`;
+        });
+    });
+}
+
+function editStudent(id, name, cls, div, parent) {
+    studentId.value = id;
+    studentName.value = name;
+    studentClass.value = cls;
+    division.value = div;
+    parentUsername.value = parent;
+}
+
+function updateStudent() {
+    if (studentId.value === "") {
+        alert("Please click Edit first");
+        return;
+    }
+
+    fetch("/admin/updateStudent/" + studentId.value, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            name: studentName.value,
+            studentClass: studentClass.value,
+            division: division.value,
+            parentUsername: parentUsername.value
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Student Updated");
+        clearStudentForm();
+        loadStudents();
+    });
+}
+
+function deleteStudent(id) {
+    fetch("/admin/deleteStudent/" + id, {
+        method: "DELETE"
+    })
+    .then(() => {
+        alert("Student Deleted");
+        loadStudents();
+    });
+}
+
+function clearStudentForm() {
+    studentId.value = "";
+    studentName.value = "";
+    studentClass.value = "";
+    division.value = "";
+    parentUsername.value = "";
+}
+
+function addTeacher() {
+    fetch("/admin/addTeacher", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            name: teacherName.value,
+            subject: teacherSubject.value
+        })
+    })
+    .then(() => {
+        alert("Teacher Added");
+        clearTeacherForm();
+        loadTeachers();
+    });
+}
+
+function loadTeachers() {
+    fetch("/admin/teachers")
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("teacherTable");
+
+        table.innerHTML = `
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Subject</th>
+                <th>Action</th>
+            </tr>`;
+
+        data.forEach(t => {
+            let row = table.insertRow();
+
+            row.innerHTML = `
+                <td>${t.id}</td>
+                <td>${t.name}</td>
+                <td>${t.subject}</td>
+                <td>
+                    <button onclick="editTeacher(${t.id}, '${t.name}', '${t.subject}')">Edit</button>
+                    <button onclick="deleteTeacher(${t.id})">Delete</button>
+                </td>`;
+        });
+    });
+}
+
+function editTeacher(id, name, subject) {
+    teacherId.value = id;
+    teacherName.value = name;
+    teacherSubject.value = subject;
+}
+
+function updateTeacher() {
+    if (teacherId.value === "") {
+        alert("Please click Edit first");
+        return;
+    }
+
+    fetch("/admin/updateTeacher/" + teacherId.value, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            name: teacherName.value,
+            subject: teacherSubject.value
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        alert("Teacher Updated");
+        clearTeacherForm();
+        loadTeachers();
+    });
+}
+
+function deleteTeacher(id) {
+    fetch("/admin/deleteTeacher/" + id, {
+        method: "DELETE"
+    })
+    .then(() => {
+        alert("Teacher Deleted");
+        loadTeachers();
+    });
+}
+
+function clearTeacherForm() {
+    teacherId.value = "";
+    teacherName.value = "";
+    teacherSubject.value = "";
+}
+
+function logout() {
+    window.location.href = "login.html";
+}
+
+loadStudents();
+loadTeachers();
+
+</script>
+
+</body>
+</html>

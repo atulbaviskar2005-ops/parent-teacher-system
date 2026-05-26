@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="navbar">
+        <h1>👨‍🏫 Teacher Dashboard</h1>
+        <p>Mark Attendance, Add Marks, Send Messages</p>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <div class="card">
+        <h2>📅 Attendance Sheet</h2>
+
+        <label>Select Subject</label>
+        <select id="attendanceSubject" onchange="resetAttendanceSelection()">
+            <option value="">Select Subject</option>
+            <option value="Java">Java</option>
+            <option value="PBL">PBL</option>
+            <option value="Data Structure">Data Structure</option>
+            <option value="Computer Networks">Computer Networks</option>
+            <option value="Software Engineering">Software Engineering</option>
+        </select>
+
+        <label>Select Division</label>
+        <select id="division" onchange="loadStudentsByDivision()">
+            <option value="">Select Division</option>
+            <option value="SY-1">SY-1</option>
+            <option value="SY-2">SY-2</option>
+            <option value="SY-3">SY-3</option>
+        </select>
+
+        <label>Date</label>
+        <input type="date" id="attendanceDate" onchange="resetAttendanceSelection()">
+
+        <label>Lecture Time</label>
+        <input type="time" id="lectureTime" onchange="resetAttendanceSelection()">
+
+        <table id="attendanceTable">
+            <tr>
+                <th>Sr No</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Status</th>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>📜 Attendance History</h2>
+
+        <button onclick="toggleAttendanceHistory()">Open / Close Attendance History</button>
+
+        <div id="historyBox" style="display:none; margin-top:15px;">
+
+            <label>Select Subject</label>
+            <select id="historySubject">
+                <option value="">Select Subject</option>
+                <option value="Java">Java</option>
+                <option value="PBL">PBL</option>
+                <option value="Data Structure">Data Structure</option>
+                <option value="Computer Networks">Computer Networks</option>
+                <option value="Software Engineering">Software Engineering</option>
+            </select>
+
+            <label>Select Division</label>
+            <select id="historyDivision">
+                <option value="">Select Division</option>
+                <option value="SY-1">SY-1</option>
+                <option value="SY-2">SY-2</option>
+                <option value="SY-3">SY-3</option>
+            </select>
+
+            <button onclick="loadAttendanceHistory()">Show Attendance</button>
+
+            <div style="overflow-x:auto;">
+                <table id="historyTable">
+                    <tr>
+                        <th>Sr No</th>
+                        <th>Student ID</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📝 Add Marks</h2>
+
+        <label>Student ID</label>
+        <input type="number" id="marksStudentId">
+
+        <label>Subject</label>
+        <select id="subject">
+            <option value="">Select Subject</option>
+            <option value="Java">Java</option>
+            <option value="PBL">PBL</option>
+            <option value="Data Structure">Data Structure</option>
+            <option value="Computer Networks">Computer Networks</option>
+            <option value="Software Engineering">Software Engineering</option>
+        </select>
+
+        <label>Marks</label>
+        <input type="number" id="marks">
+
+        <button onclick="addMarks()">Add Marks</button>
+    </div>
+
+    <div class="card">
+        <h2>💬 Send Message</h2>
+
+        <label>Student ID</label>
+        <input type="number" id="messageStudentId">
+
+        <label>Message</label>
+        <textarea id="messageText"></textarea>
+
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+</div>
+
+<script>
+
+let attendanceList = [];
+let alreadySaved = false;
+
+function resetAttendanceSelection() {
+    attendanceList = [];
+    alreadySaved = false;
+
+    let rows = document.querySelectorAll("#attendanceTable tr");
+
+    for (let i = 1; i < rows.length; i++) {
+        rows[i].style.background = "";
+
+        let studentId = rows[i].cells[1].innerText;
+
+        let pBtn = document.getElementById("p" + studentId);
+        let aBtn = document.getElementById("a" + studentId);
+
+        if (pBtn) {
+            pBtn.style.background = "";
+            pBtn.style.color = "";
+        }
+
+        if (aBtn) {
+            aBtn.style.background = "";
+            aBtn.style.color = "";
+        }
+    }
+}
+
+function loadStudentsByDivision() {
+    let division = document.getElementById("division").value;
+
+    attendanceList = [];
+    alreadySaved = false;
+
+    if (division === "") {
+        return;
+    }
+
+    fetch("http://localhost:8082/teacher/studentsByDivision/" + division)
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("attendanceTable");
+
+        table.innerHTML = `
+            <tr>
+                <th>Sr No</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Status</th>
+            </tr>`;
+
+        data.forEach((s, index) => {
+            let row = table.insertRow();
+            row.id = "row" + s.id;
+
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${s.id}</td>
+                <td>${s.name}</td>
+                <td>
+                    <button onclick="setStatus(${s.id}, 'Present')" id="p${s.id}">P</button>
+                    <button onclick="setStatus(${s.id}, 'Absent')" id="a${s.id}">A</button>
+                </td>`;
+        });
+    })
+    .catch(error => {
+        alert("Student list not loaded");
+        console.log(error);
+    });
+}
+
+function setStatus(studentId, status) {
+    let subjectValue = document.getElementById("attendanceSubject").value;
+    let dateValue = document.getElementById("attendanceDate").value;
+    let divisionValue = document.getElementById("division").value;
+    let lectureTimeValue = document.getElementById("lectureTime").value;
+
+    if (subjectValue === "") {
+        alert("Please select subject first");
+        return;
+    }
+
+    if (divisionValue === "") {
+        alert("Please select division first");
+        return;
+    }
+
+    if (dateValue === "") {
+        alert("Please select date first");
+        return;
+    }
+
+    if (lectureTimeValue === "") {
+        alert("Please select lecture time first");
+        return;
+    }
+
+    if (alreadySaved) {
+        alert("Attendance already saved. Change subject/date/time/division to mark again.");
+        return;
+    }
+
+    attendanceList = attendanceList.filter(a => a.studentId !== studentId);
+
+    attendanceList.push({
+        studentId: studentId,
+        status: status
+    });
+
+    let row = document.getElementById("row" + studentId);
+    let pBtn = document.getElementById("p" + studentId);
+    let aBtn = document.getElementById("a" + studentId);
+
+    if (status === "Present") {
+        row.style.background = "#dcfce7";
+        pBtn.style.background = "green";
+        pBtn.style.color = "white";
+        aBtn.style.background = "";
+        aBtn.style.color = "";
+    } else {
+        row.style.background = "#fee2e2";
+        aBtn.style.background = "red";
+        aBtn.style.color = "white";
+        pBtn.style.background = "";
+        pBtn.style.color = "";
+    }
+
+    autoSaveWhenAllMarked();
+}
+
+function autoSaveWhenAllMarked() {
+    let subjectValue = document.getElementById("attendanceSubject").value;
+    let dateValue = document.getElementById("attendanceDate").value;
+    let lectureTimeValue = document.getElementById("lectureTime").value;
+    let totalStudents = document.querySelectorAll("#attendanceTable tr").length - 1;
+
+    if (attendanceList.length === totalStudents && alreadySaved === false) {
+        alreadySaved = true;
+
+        attendanceList.forEach(a => {
+            fetch("http://localhost:8082/teacher/addAttendance", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    studentId: a.studentId,
+                    subject: subjectValue,
+                    date: dateValue,
+                    lectureTime: lectureTimeValue,
+                    status: a.status
+                })
+            });
+        });
+
+        alert("All Attendance Saved Automatically");
+    }
+}
+
+function toggleAttendanceHistory() {
+    let box = document.getElementById("historyBox");
+
+    if (box.style.display === "none") {
+        box.style.display = "block";
+    } else {
+        box.style.display = "none";
+    }
+}
+
+function loadAttendanceHistory() {
+    let subject = document.getElementById("historySubject").value;
+    let division = document.getElementById("historyDivision").value;
+
+    if (subject === "" || division === "") {
+        alert("Please select subject and division");
+        return;
+    }
+
+    fetch("http://localhost:8082/teacher/attendanceHistory?subject=" + subject + "&division=" + division)
+    .then(res => res.json())
+    .then(data => {
+
+        let table = document.getElementById("historyTable");
+
+        if (data.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <th>No Attendance Found</th>
+                </tr>`;
+            return;
+        }
+
+        let dates = [...new Set(data.map(a => a.date + " " + (a.lectureTime || "No Time")))];
+        dates.sort();
+
+        let students = {};
+
+        data.forEach(a => {
+            let key = a.date + " " + (a.lectureTime || "No Time");
+
+            if (!students[a.studentId]) {
+                students[a.studentId] = {
+                    studentId: a.studentId,
+                    records: {}
+                };
+            }
+
+            students[a.studentId].records[key] = a.status;
+        });
+
+        let header = `
+            <tr>
+                <th>Sr No</th>
+                <th>Student ID</th>`;
+
+        dates.forEach(d => {
+            header += `<th>${d}</th>`;
+        });
+
+        header += `</tr>`;
+
+        table.innerHTML = header;
+
+        let sr = 1;
+
+        Object.values(students).forEach(student => {
+            let row = table.insertRow();
+
+            let rowHTML = `
+                <td>${sr++}</td>
+                <td>${student.studentId}</td>`;
+
+            dates.forEach(d => {
+                let status = student.records[d] || "-";
+
+                if (status === "Present") {
+                    rowHTML += `<td style="background:#dcfce7; color:green; font-weight:bold;">P</td>`;
+                } else if (status === "Absent") {
+                    rowHTML += `<td style="background:#fee2e2; color:red; font-weight:bold;">A</td>`;
+                } else {
+                    rowHTML += `<td>-</td>`;
+                }
+            });
+
+            row.innerHTML = rowHTML;
+        });
+    })
+    .catch(error => {
+        alert("Attendance history not loaded");
+        console.log(error);
+    });
+}
+
+function addMarks() {
+    if (marksStudentId.value === "" || subject.value === "" || marks.value === "") {
+        alert("Please fill all marks fields");
+        return;
+    }
+
+    fetch("http://localhost:8082/teacher/addMarks", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            studentId: marksStudentId.value,
+            subject: subject.value,
+            marks: marks.value
+        })
+    })
+    .then(() => {
+        alert("Marks Added");
+        marksStudentId.value = "";
+        subject.value = "";
+        marks.value = "";
+    });
+}
+
+function sendMessage() {
+    if (messageStudentId.value === "" || messageText.value === "") {
+        alert("Please fill all message fields");
+        return;
+    }
+
+    fetch("http://localhost:8082/teacher/sendMessage", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            studentId: messageStudentId.value,
+            content: messageText.value
+        })
+    })
+    .then(() => {
+        alert("Message Sent");
+        messageStudentId.value = "";
+        messageText.value = "";
+    });
+}
+
+function logout() {
+    window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>

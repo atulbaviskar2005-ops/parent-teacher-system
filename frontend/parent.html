@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Parent Dashboard</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f4f4;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    box-shadow: 0px 0px 10px gray;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: blue;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: darkblue;
+}
+
+h2 {
+    text-align: center;
+}
+
+pre {
+    background: #eee;
+    padding: 10px;
+    height: 150px;
+    overflow: auto;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>Parent Dashboard</h1>
+
+<!-- Student ID input -->
+<div class="box" style="width:100%;">
+    <h3>Enter Student ID</h3>
+    <input type="number" id="studentId" placeholder="Enter Student ID">
+</div>
+
+<div class="container">
+
+    <!-- Attendance -->
+    <div class="box">
+        <h2>Attendance</h2>
+        <button onclick="getAttendance()">View Attendance</button>
+        <pre id="attendanceData"></pre>
+    </div>
+
+    <!-- Marks -->
+    <div class="box">
+        <h2>Marks</h2>
+        <button onclick="getMarks()">View Marks</button>
+        <pre id="marksData"></pre>
+    </div>
+
+    <!-- Messages -->
+    <div class="box">
+        <h2>Messages</h2>
+        <button onclick="getMessages()">View Messages</button>
+        <pre id="messageData"></pre>
+    </div>
+
+</div>
+
+<script>
+
+// 📊 Get Attendance
+function getAttendance() {
+
+    let id = document.getElementById("studentId").value;
+
+    fetch("http://localhost:8080/parent/attendance/" + id)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("attendanceData").innerText =
+            JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+        document.getElementById("attendanceData").innerText = "Error fetching data";
+    });
+}
+
+
+// 📝 Get Marks
+function getMarks() {
+
+    let id = document.getElementById("studentId").value;
+
+    fetch("http://localhost:8080/parent/marks/" + id)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("marksData").innerText =
+            JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+        document.getElementById("marksData").innerText = "Error fetching data";
+    });
+}
+
+
+// 💬 Get Messages
+function getMessages() {
+
+    let id = document.getElementById("studentId").value;
+
+    fetch("http://localhost:8080/parent/messages/" + id)
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("messageData").innerText =
+            JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+        document.getElementById("messageData").innerText = "Error fetching data";
+    });
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Parent Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="navbar">
+        <h1>👨‍👩‍👧 Parent Dashboard</h1>
+        <p>Daily Attendance, Marks and Messages</p>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <div class="card">
+        <h2 id="studentInfo">Loading student data...</h2>
+    </div>
+
+    <div class="card">
+        <h2>📊 Overall Attendance Percentage</h2>
+        <h3 id="attendancePercent">Loading...</h3>
+    </div>
+
+    <div class="card">
+        <h2>📚 Subject-wise Attendance Percentage</h2>
+        <table id="subjectPercentTable">
+            <tr>
+                <th>Subject</th>
+                <th>Percentage</th>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>📅 Subject-wise Daily Attendance</h2>
+        <table id="attendanceTable">
+            <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Status</th>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>📝 Marks</h2>
+        <table id="marksTable">
+            <tr>
+                <th>Subject</th>
+                <th>Marks</th>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>💬 Messages / Notes</h2>
+        <table id="messageTable">
+            <tr>
+                <th>Message</th>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+<script>
+function loadParentStudent() {
+    const parentUsername = localStorage.getItem("parentUsername");
+
+    if (!parentUsername) {
+        alert("Please login again");
+        window.location.href = "login.html";
+        return;
+    }
+
+    fetch("/parent/studentByParent/" + parentUsername)
+    .then(res => res.json())
+    .then(student => {
+        if (!student || !student.id) {
+            document.getElementById("studentInfo").innerText = "No student found for this parent";
+            return;
+        }
+
+        document.getElementById("studentInfo").innerText =
+            "Student: " + student.name +
+            " | Class: " + (student.studentClass || "-") +
+            " | Division: " + (student.division || "-") +
+            " | ID: " + student.id;
+
+        loadAttendance(student.id);
+        loadAttendancePercent(student.id);
+        loadSubjectAttendancePercent(student.id);
+        loadMarks(student.id);
+        loadMessages(student.id);
+    })
+    .catch(err => {
+        document.getElementById("studentInfo").innerText = "Error loading student data";
+        console.log(err);
+    });
+}
+
+function loadAttendancePercent(studentId) {
+    fetch("/parent/attendancePercent/" + studentId)
+    .then(res => res.text())
+    .then(data => {
+        document.getElementById("attendancePercent").innerText = data;
+    });
+}
+
+function loadSubjectAttendancePercent(studentId) {
+    fetch("/parent/subjectAttendancePercent/" + studentId)
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("subjectPercentTable");
+
+        table.innerHTML = `
+            <tr>
+                <th>Subject</th>
+                <th>Percentage</th>
+            </tr>
+        `;
+
+        Object.keys(data).forEach(subject => {
+            let row = table.insertRow();
+            row.insertCell(0).innerText = subject;
+            row.insertCell(1).innerText = data[subject];
+        });
+    });
+}
+
+function loadAttendance(studentId) {
+    fetch("/parent/attendance/" + studentId)
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("attendanceTable");
+
+        table.innerHTML = `
+            <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Status</th>
+            </tr>
+        `;
+
+        data.forEach(a => {
+            let row = table.insertRow();
+            row.insertCell(0).innerText = a.date;
+            row.insertCell(1).innerText = a.subject || "-";
+            row.insertCell(2).innerText = a.status;
+        });
+    });
+}
+
+function loadMarks(studentId) {
+    fetch("/parent/marks/" + studentId)
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("marksTable");
+
+        table.innerHTML = `
+            <tr>
+                <th>Subject</th>
+                <th>Marks</th>
+            </tr>
+        `;
+
+        data.forEach(m => {
+            let row = table.insertRow();
+            row.insertCell(0).innerText = m.subject;
+            row.insertCell(1).innerText = m.marks;
+        });
+    });
+}
+
+function loadMessages(studentId) {
+    fetch("/parent/messages/" + studentId)
+    .then(res => res.json())
+    .then(data => {
+        let table = document.getElementById("messageTable");
+
+        table.innerHTML = `
+            <tr>
+                <th>Message</th>
+            </tr>
+        `;
+
+        data.forEach(msg => {
+            let row = table.insertRow();
+            row.insertCell(0).innerText = msg.content;
+        });
+    });
+}
+
+function logout() {
+    localStorage.removeItem("parentUsername");
+    window.location.href = "login.html";
+}
+
+loadParentStudent();
+</script>
+
+</body>
+</html>
