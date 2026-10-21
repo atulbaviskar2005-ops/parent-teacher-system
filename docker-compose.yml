@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKERHUB_USERNAME:-local}/parent-teacher-system:${APP_TAG:-latest}
+    environment:
+      SERVER_PORT: 8082
+      OPEN_BROWSER_ON_STARTUP: "false"
+      MONGODB_URI: mongodb://mongodb:27017
+      MONGODB_DATABASE: parent_teacher_db
+      JWT_SECRET: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
+    ports:
+      - "8082:8082"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - parent-teacher-network
+
+  mongodb:
+    image: mongo:7.0
+    environment:
+      MONGO_INITDB_DATABASE: parent_teacher_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.adminCommand(\"ping\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - parent-teacher-network
+
+  mongo-express:
+    image: mongo-express:1.0
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - parent-teacher-network
+
+volumes:
+  mongodb-data:
+
+networks:
+  parent-teacher-network:
+    driver: bridge

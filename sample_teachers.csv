@@ -1,0 +1,4 @@
+employeeId,fullName,email,username,password,subject,department,designation,qualification,phone,divisions
+EMP101,Dr. Ananya Joshi,ananya.joshi@mitadt.edu,ananya_j,Teacher@123,Java Programming,CSE,Associate Professor,Ph.D Computer Engineering,9876543220,SY-1;SY-2
+EMP102,Prof. Rohan Shinde,rohan.shinde@mitadt.edu,rohan_s,Teacher@123,Data Structures,CSE,Assistant Professor,M.Tech CSE,9876543221,SY-1;SY-2
+EMP103,Prof. Neha Deshmukh,neha.deshmukh@mitadt.edu,neha_d,Teacher@123,Signals and Systems,ENTC,Assistant Professor,M.Tech ENTC,9876543222,SY-2

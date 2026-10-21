@@ -1,0 +1,4 @@
+registrationNumber,rollNumber,name,class,division,mentorBatch,parentName,parentEmail,parentPhone,department,teacherEmployeeId
+PRN2026CSE101,SY2026-101,Aarav Sharma,SY,1,Batch A1,Sunil Sharma,sunil.sharma@gmail.com,9876543210,CSE,EMP101
+PRN2026CSE102,SY2026-102,Ananya Deshmukh,SY,1,Batch A1,Vijay Deshmukh,vijay.deshmukh@gmail.com,9876543211,CSE,EMP102
+PRN2026CSE103,SY2026-103,Rohan Kulkarni,SY,2,Batch A2,Suresh Kulkarni,suresh.kulkarni@gmail.com,9876543212,CSE,EMP103
